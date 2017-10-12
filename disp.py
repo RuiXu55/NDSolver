@@ -25,19 +25,28 @@ def intgrand(s,*args):
   h1,h2,kappa,n,case = args
   # in epsilon[0,0], epsilon[0,2],epsilon[2,2]
   if   case==0:
-    return sp.jv(n,h2*np.sqrt(s-1.))*sp.jv(n,h2*np.sqrt(s-1.))/(s**(kappa+2.))*f.Zk(h1/np.sqrt(s),kappa+1)
+    return sp.jv(n,h2*np.sqrt(s-1.))*sp.jv(n,h2*np.sqrt(s-1.))/(s**(kappa+2.))*f.Zk(h1/np.sqrt(s),int(kappa+1))
   # in epsilon[1,1]
   elif case==1:
-    return (s-1.)*sp.jvp(n,h2*np.sqrt(s-1.))**2/(s**(kappa+2.))*f.Zk(h1/np.sqrt(s),kappa+1)
+    return (s-1.)*sp.jvp(n,h2*np.sqrt(s-1.))**2/(s**(kappa+2.))*f.Zk(h1/np.sqrt(s),int(kappa+1))
   # in epsilon[0,1], epsilon[1,2]
   elif case==2:
-    return np.sqrt(s-1.)*sp.jv(n,h2*np.sqrt(s-1.))*sp.jvp(n,h2*np.sqrt(s-1.))/(s**(kappa+2.))*f.Zk(h1/np.sqrt(s),kappa+1)
+    return np.sqrt(s-1.)*sp.jv(n,h2*np.sqrt(s-1.))*sp.jvp(n,h2*np.sqrt(s-1.))/(s**(kappa+2.))*f.Zk(h1/np.sqrt(s),int(kappa+1))
   # integrate zeta func
   elif case==3:
     return np.exp(-s**2)*(1./(s-h1)-1./(s+h1))
   else:
     sys.exit("FATAL ERROR in function intgrand: case not exist! \n")
 
+def complex_quadrature(intgrand,zh,jh,kappa,n,case):
+  data = (zh,jh,kappa,n,case)
+  def real_func(x,*args):
+    return np.real(intgrand(x,*args))
+  def imag_func(x,*args):
+    return np.imag(intgrand(x,*args))
+  real_integral = quad(real_func, 1, np.inf, args=data)
+  imag_integral = quad(imag_func, 1, np.inf, args=data)
+  return (real_integral[0] + 1j*imag_integral[0])
 
 ''' General dispersion relation for bi-maxwellian & kappa distribution '''
 def det(z,*data):
@@ -87,9 +96,14 @@ def det(z,*data):
           zh    = np.sqrt((2.*kappa+2.)/(2.*kappa-3.))*(omega-n*q*mu)/\
 		  (np.sqrt(beta_para*mu)*k*np.cos(theta))*np.sqrt(dens)
           jh    = k*np.sin(theta)/q*np.sqrt((2.*kappa-3.)*beta_perp/2./mu/dens)
+	  intxx = complex_quadrature(intgrand,zh,jh,kappa,n,0)
+	  intyy = complex_quadrature(intgrand,zh,jh,kappa,n,1)
+	  intxy = complex_quadrature(intgrand,zh,jh,kappa,n,2)
+          '''
           intxx = quad(intgrand,1,np.inf,args=(zh,jh,kappa,n,0))
           intyy = quad(intgrand,1,np.inf,args=(zh,jh,kappa,n,1))
           intxy = quad(intgrand,1,np.inf,args=(zh,jh,kappa,n,2))
+	  '''
 
           add_eps[0,0] += 4.*np.sqrt(2.)*mu**1.5*dens**2.5*q**4*(kappa-0.5)*((kappa+1.)/(2.*kappa-3.))**1.5\
              /(beta_perp*(k*np.sin(theta))**2)/(np.sqrt(beta_para)*k*np.cos(theta))*n**2*eta*intxx

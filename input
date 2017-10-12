@@ -5,7 +5,7 @@ delta          = 0.001       # omega_ci/omega_pi = va/c
 kappa_limit    = 40          # kappa>limit, automatically switch to bi-maxwellian 
 kstart         = 0.01        # k normalized as k*d_i
 kend           = 0.1          
-ksteps         = 20
+ksteps         = 10
 
 < initial_guess >
 
@@ -21,14 +21,14 @@ mu             = 1.0         # mass (unit for other species)
 dens           = 1.0         # density (unit for other species)
 beta_para      = 20          # plasma_beta_parallel
 beta_perp      = 10          # plasma_beta_perp
-kappa          = 100         # kappa 
+kappa          = 10         # kappa 
 < second species ---------- #
 q              = -1.0
 mu             = 100.
 dens           = 1.0
 beta_para      = 20
 beta_perp      = 20
-kappa          = 100
+kappa          = 10
 
 < accuracy >
 
