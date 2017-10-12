@@ -1,4 +1,5 @@
 import sys
+import scipy
 import logging
 import zetaf as f
 import numpy as np
@@ -23,27 +24,28 @@ intgrand for kappa-distribution dispersion
 '''
 def intgrand(s,*args):
   h1,h2,kappa,n,case = args
+
   # in epsilon[0,0], epsilon[0,2],epsilon[2,2]
   if   case==0:
-    return sp.jv(n,h2*np.sqrt(s-1.))*sp.jv(n,h2*np.sqrt(s-1.))/(s**(kappa+2.))*f.Zk(h1/np.sqrt(s),int(kappa+1))
+    return sp.jv(n,h2*np.sqrt(s-1.))*sp.jv(n,h2*np.sqrt(s-1.))\
+           /(s**(kappa+2.))*f.Zk(h1/np.sqrt(s),int(kappa+1))
   # in epsilon[1,1]
   elif case==1:
-    return (s-1.)*sp.jvp(n,h2*np.sqrt(s-1.))**2/(s**(kappa+2.))*f.Zk(h1/np.sqrt(s),int(kappa+1))
+    return (s-1.)*sp.jvp(n,h2*np.sqrt(s-1.))**2/(s**(kappa+2.))*\
+           f.Zk(h1/np.sqrt(s),int(kappa+1))
   # in epsilon[0,1], epsilon[1,2]
   elif case==2:
-    return np.sqrt(s-1.)*sp.jv(n,h2*np.sqrt(s-1.))*sp.jvp(n,h2*np.sqrt(s-1.))/(s**(kappa+2.))*f.Zk(h1/np.sqrt(s),int(kappa+1))
-  # integrate zeta func
-  elif case==3:
-    return np.exp(-s**2)*(1./(s-h1)-1./(s+h1))
+    return np.sqrt(s-1.)*sp.jv(n,h2*np.sqrt(s-1.))*sp.jvp(n,h2*np.sqrt(s-1.))\
+           /(s**(kappa+2.))*f.Zk(h1/np.sqrt(s),int(kappa+1))
   else:
-    sys.exit("FATAL ERROR in function intgrand: case not exist! \n")
+    sys.exit("FATAL ERROR in function intgrand: case does not exist! \n")
 
 def complex_quadrature(intgrand,zh,jh,kappa,n,case):
   data = (zh,jh,kappa,n,case)
   def real_func(x,*args):
-    return np.real(intgrand(x,*args))
+    return scipy.real(intgrand(x,*args))
   def imag_func(x,*args):
-    return np.imag(intgrand(x,*args))
+    return scipy.imag(intgrand(x,*args))
   real_integral = quad(real_func, 1, np.inf, args=data)
   imag_integral = quad(imag_func, 1, np.inf, args=data)
   return (real_integral[0] + 1j*imag_integral[0])
@@ -54,9 +56,8 @@ def det(z,*data):
   logging.basicConfig(level=args.loglevel or logging.INFO)
   logger = logging.getLogger(__name__)
 
-  omega  = complex(z[0],z[1])  # omega/Omega_i
+  omega  = z[0] +1j*z[1]  # omega/Omega_ci
   theta  = p['theta'][0]*np.pi/180.
-  j      = complex(0,1.)
 
   # epsilon is renormalized: epsilon = epsilon*(v_A^2/c^2*omega^2)
   epsilon  = np.zeros((3,3),dtype=complex)
@@ -99,22 +100,17 @@ def det(z,*data):
 	  intxx = complex_quadrature(intgrand,zh,jh,kappa,n,0)
 	  intyy = complex_quadrature(intgrand,zh,jh,kappa,n,1)
 	  intxy = complex_quadrature(intgrand,zh,jh,kappa,n,2)
-          '''
-          intxx = quad(intgrand,1,np.inf,args=(zh,jh,kappa,n,0))
-          intyy = quad(intgrand,1,np.inf,args=(zh,jh,kappa,n,1))
-          intxy = quad(intgrand,1,np.inf,args=(zh,jh,kappa,n,2))
-	  '''
-
+         
           add_eps[0,0] += 4.*np.sqrt(2.)*mu**1.5*dens**2.5*q**4*(kappa-0.5)*((kappa+1.)/(2.*kappa-3.))**1.5\
              /(beta_perp*(k*np.sin(theta))**2)/(np.sqrt(beta_para)*k*np.cos(theta))*n**2*eta*intxx
           add_eps[1,1] += 2.*np.sqrt(2.)*chi*(kappa-0.5)/np.sqrt(2.*kappa-3.)*(kappa+1.)**1.5*eta*intyy
           add_eps[2,2] += 4.*np.sqrt(2.)/np.sqrt(mu)*dens**2.5*q**2*(kappa-0.5)*((kappa+1.)/(2.*kappa-3.0))**1.5\
              /beta_perp/np.sqrt(beta_para)/(k*np.cos(theta))**3*eta*(omega-n*mu*q)**2*intxx
-          add_eps[0,1] += 4.*j*mu*dens**2*q**3/np.sqrt(beta_perp*beta_para)/(k**2*np.cos(theta)*np.sin(theta))*\
+          add_eps[0,1] += 4j*mu*dens**2*q**3/np.sqrt(beta_perp*beta_para)/(k**2*np.cos(theta)*np.sin(theta))*\
              (kappa-0.5)/(2.*kappa-3.)*(kappa+1.)**1.5*n*eta*intxy
           add_eps[0,2] += 4.*np.sqrt(2.)*np.sqrt(mu)*dens**2.5*q**3*(kappa-0.5)*((kappa+1)/(2.*kappa-3.))**1.5/\
              beta_perp/(k*np.sin(theta))/np.sqrt(beta_para)/(k*np.cos(theta))**2*n*eta*(omega-n*mu*q)*intxx
-          add_eps[1,2] += -4.*j*dens**2*q**2*(kappa-0.5)/(2.*kappa-3.)*(kappa+1.)**1.5/np.sqrt(beta_perp*beta_para)\
+          add_eps[1,2] += -4j*dens**2*q**2*(kappa-0.5)/(2.*kappa-3.)*(kappa+1.)**1.5/np.sqrt(beta_perp*beta_para)\
              /(k*np.cos(theta))**2*eta*(omega-n*mu*q)*intxy
 
         # check if we should increase N
@@ -160,6 +156,7 @@ def det(z,*data):
     k**2*np.sin(theta)*np.cos(theta))-(epsilon[1,1]-k**2)*(epsilon[0,2]+\
     k**2*np.sin(theta)*np.cos(theta))**2+(epsilon[0,0]-(k*np.cos(theta))**2)*\
     epsilon[1,2]**2+(epsilon[2,2]-(k*np.sin(theta))**2)*epsilon[0,1]**2
+  disp_det /= omega
 
   logger.debug("disp_det = %e+%ei \n",disp_det.real,disp_det.imag)
   return (disp_det.real,disp_det.imag)
