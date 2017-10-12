@@ -1,0 +1,9 @@
+###### Requirements without Version Specifiers ######
+sys
+time
+numpy
+scipy
+argparse
+matplotlib
+
+###### Requirements with Version Specifiers ######

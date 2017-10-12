@@ -1,0 +1,19 @@
+# log file
+*log
+*.dat
+*.out
+*.o
+*.npy
+
+# module file
+*.pyc
+
+# output file
+*.jpg
+*.png
+*.pdf
+
+# directory
+__pycache__/
+tst/
+tmp/
