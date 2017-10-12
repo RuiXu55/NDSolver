@@ -5,7 +5,7 @@ delta          = 0.001       # omega_ci/omega_pi = va/c
 kappa_limit    = 40          # kappa>limit, automatically switch to bi-maxwellian 
 kstart         = 0.01        # k normalized as k*d_i
 kend           = 0.1          
-ksteps         = 2 
+ksteps         = 20
 
 < initial_guess >
 
