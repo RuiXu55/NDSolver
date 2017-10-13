@@ -167,13 +167,20 @@ def det(z,*data):
 """ dispersion relation for parallal propagation """
 def det_para(z,*data):
   args,p,k = data
-  logging.basicConfig(level=args.loglevel or logging.INFO)
-  logger = logging.getLogger(__name__)
 
-  omega  = z[0] +1j*z[1]  # omega/Omega_ci
-  logger.debug("omega = %e+%ei \n",omega.real,omega.imag)
+  omega    = z[0] +1j*z[1]  # omega/Omega_ci
+  disp_det = (p['delta'][0]*omega)**2-k**2
+  for m in range(int(p['Nsp'][0])):
+    beta_perp  = p['beta_perp'][m]
+    beta_para  = p['beta_para'][m]
+    beta_ratio = beta_perp/beta_para
+    kap        = int(p['kappa'][m])
+    ak         = np.sqrt(2.*kap/(2.*kap-3.))
+    dens       = p['dens'][m]
+    mu         = p['mu'][m]
+    q          = p['q'][m]
+    ze         = ak*(omega+mu*q)/k/np.sqrt(beta_para)
+    ze0        = ak*omega/k/np.sqrt(beta_para)
+    disp_det  += dens*mu*q**2*(ze0*f.Zk_para(ze,kap)+(beta_ratio-1.)*(1.+ze*f.Zk_para(ze,kap)))
 
-
-  disp_det /= omega**p['exp'][0]
-  logger.debug("disp_det = %e+%ei \n",disp_det.real,disp_det.imag)
   return (disp_det.real,disp_det.imag)
