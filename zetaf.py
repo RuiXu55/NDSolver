@@ -8,7 +8,6 @@
 import sys
 import numpy as np
 import scipy.special as sp
-from scipy.integrate import quad
 
 # Plasma dispersion function
 def Z(ze): 
@@ -35,6 +34,13 @@ def Zk(ze,k):
 
     zk += fac_ratio*(1j)**(k-l)*(2./(ze/np.sqrt(1.*k)+1j))**(k-l+1)
   return  -(k-0.5)/(2.*k**(1.5))*zk
+
+'''modified 'kappa' dispersion function for parallel propagation
+   Lazar et. al. 2008
+'''
+def Zk_para(ze,kappa):
+  return (1.+ ze**2/kappa)*Zk(ze,kappa)+ze/kappa*(1.-0.5/kappa)
+
 
 # Calculate the paralle integral Z_n(zeta)
 def p(ze,n):

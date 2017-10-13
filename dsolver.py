@@ -53,9 +53,15 @@ def main(args):
     """ find dispersion relation root """
     data = (args, param, wave_k[n])
     try:
-      sol = root(disp.det,(zeta_guess.real,zeta_guess.imag), \
+      # use parallel dsp if theta<0.1 degree
+      if (abs(p['theta'][0])<0.1):
+        sol = root(disp.det_para,(zeta_guess.real,zeta_guess.imag), \
             args=data,method='hybr',tol=param['sol_err'][0]) 
-      fzeta[n] = complex(sol.x[0],sol.x[1])
+        fzeta[n] = complex(sol.x[0],sol.x[1])
+      else:
+        sol = root(disp.det,(zeta_guess.real,zeta_guess.imag), \
+            args=data,method='hybr',tol=param['sol_err'][0]) 
+        fzeta[n] = complex(sol.x[0],sol.x[1])
       logger.info("solution: k=%f , zeta=%e+%ei\n",wave_k[n],fzeta[n].real, fzeta[n].imag)
     except ValueError:
       logger.info('ERROR in root finding: wave_k =%f',wave_k[n])
