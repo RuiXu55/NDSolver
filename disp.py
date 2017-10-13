@@ -74,7 +74,7 @@ def det(z,*data):
     dens       = p['dens'][m]
     mu         = p['mu'][m]
     q          = p['q'][m]
-    kappa      = p['kappa'][m]
+    kappa      = int(p['kappa'][m])
 
     ''' chiX shortcut for long terms '''
     chi        = dens**1.5*q**2*np.sqrt(mu/beta_para)/(k*np.cos(theta))
@@ -160,6 +160,20 @@ def det(z,*data):
     k**2*np.sin(theta)*np.cos(theta))**2+(epsilon[0,0]-(k*np.cos(theta))**2)*\
     epsilon[1,2]**2+(epsilon[2,2]-(k*np.sin(theta))**2)*epsilon[0,1]**2
 
-  #disp_det /= omega
+  disp_det /= omega**p['exp'][0]
+  logger.debug("disp_det = %e+%ei \n",disp_det.real,disp_det.imag)
+  return (disp_det.real,disp_det.imag)
+
+""" dispersion relation for parallal propagation """
+def det_para(z,*data):
+  args,p,k = data
+  logging.basicConfig(level=args.loglevel or logging.INFO)
+  logger = logging.getLogger(__name__)
+
+  omega  = z[0] +1j*z[1]  # omega/Omega_ci
+  logger.debug("omega = %e+%ei \n",omega.real,omega.imag)
+
+
+  disp_det /= omega**p['exp'][0]
   logger.debug("disp_det = %e+%ei \n",disp_det.real,disp_det.imag)
   return (disp_det.real,disp_det.imag)

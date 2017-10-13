@@ -26,7 +26,7 @@ def main(args):
   param = {}
   if not args.input :
     args.input = 'input'
-  with open('input','r') as f:
+  with open(args.input,'r') as f:
     for line in f:
       if not line.isspace():
         data = line.split()
