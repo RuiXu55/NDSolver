@@ -27,16 +27,14 @@ WARNING! ONLY WORK FOR INTEGER k
 '''
 
 def Zk(ze,k):
-  i  = complex(0.,1.)
   zk = complex(0.,0.)
+  for l in range(0,k+1):
+    fac_ratio = 1.0 
+    for r in range(1,k+1):
+      fac_ratio *= (l+r)/(k+r)
 
-  fac = 1.0 
-  for l in range(0,k):
-    for r in range(1,k):
-      fac *= (l+r)/(k+r)
-      zk += fac*i**(k-l)*(2.0/(ze/np.sqrt(1.*k)+i))**(k-l+1)
-      zk *= -(k-0.5)/(2.*k**(1.5))
-  return zk
+    zk += fac_ratio*(1j)**(k-l)*(2./(ze/np.sqrt(1.*k)+1j))**(k-l+1)
+  return  -(k-0.5)/(2.*k**(1.5))*zk
 
 # Calculate the paralle integral Z_n(zeta)
 def p(ze,n):

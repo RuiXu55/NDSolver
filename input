@@ -1,16 +1,16 @@
 < problem >                  
 
 theta          = 60.         # propagation angle (i.e.between k and B)
-delta          = 0.001       # omega_ci/omega_pi = va/c
+delta          = 0.00001     # omega_ci/omega_pi = va/c
 kappa_limit    = 40          # kappa>limit, automatically switch to bi-maxwellian 
-kstart         = 0.01        # k normalized as k*d_i
-kend           = 0.1          
-ksteps         = 10
+kstart         = 0.1        # k normalized as k*d_i
+kend           = 1.0          
+ksteps         = 100
 
 < initial_guess >
 
-omega_r        = 0.000001    # real part
-omega_i        = 0.1         # imag part
+omega_r        = 0.0000009    # real part
+omega_i        = 0.09         # imag part
 
 < plasma > 
 
@@ -32,6 +32,7 @@ kappa          = 10
 
 < accuracy >
 
-eps_error      = 1.0e-6       # epsilon calculation error
-sol_err        = 1.0e-8       # root finding error
+N              = 5            # initial N for Besell summation,N<5
+eps_error      = 1.0e-4       # epsilon calculation error
+sol_err        = 1.0e-4       # root finding error
 

@@ -9,13 +9,15 @@ from scipy.integrate import quad
 # check whether the summation over n is already accurate enough
 def check_eps(epsi,eps,N,err):
   zipped = zip([0,0,0,1,1,2],[0,1,2,1,2,2])
-  if ((N<=4) or sum(abs((epsi[i,j].real-eps[i,j].real)/epsi[i,j].real)>err for i,j in zipped) or \
+  if ((N<=5) or sum(abs((epsi[i,j].real-eps[i,j].real)/epsi[i,j].real)>err for i,j in zipped) or \
    sum(abs((epsi[i,j].imag-eps[i,j].imag)/epsi[i,j].imag)>err for i,j in zipped)):
     var = False
   else:
     var = True
   for i,j in zipped:
     epsi[i,j] = eps[i,j]
+  if(N>=10):
+    var = True
   return epsi,var
 
 
@@ -24,19 +26,17 @@ intgrand for kappa-distribution dispersion
 '''
 def intgrand(s,*args):
   h1,h2,kappa,n,case = args
-
+  Zk = f.Zk(h1/np.sqrt(s),int(kappa+1))
   # in epsilon[0,0], epsilon[0,2],epsilon[2,2]
-  if   case==0:
-    return sp.jv(n,h2*np.sqrt(s-1.))*sp.jv(n,h2*np.sqrt(s-1.))\
-           /(s**(kappa+2.))*f.Zk(h1/np.sqrt(s),int(kappa+1))
+  if  (case==0):
+    return sp.jv(n,h2*np.sqrt(s-1.))**2/(s**(kappa+2.))*Zk
   # in epsilon[1,1]
-  elif case==1:
-    return (s-1.)*sp.jvp(n,h2*np.sqrt(s-1.))**2/(s**(kappa+2.))*\
-           f.Zk(h1/np.sqrt(s),int(kappa+1))
+  elif(case==1):
+    return (s-1.)*sp.jvp(n,h2*np.sqrt(s-1.))**2/(s**(kappa+2.))*Zk
   # in epsilon[0,1], epsilon[1,2]
   elif case==2:
     return np.sqrt(s-1.)*sp.jv(n,h2*np.sqrt(s-1.))*sp.jvp(n,h2*np.sqrt(s-1.))\
-           /(s**(kappa+2.))*f.Zk(h1/np.sqrt(s),int(kappa+1))
+           /(s**(kappa+2.))*Zk
   else:
     sys.exit("FATAL ERROR in function intgrand: case does not exist! \n")
 
@@ -57,6 +57,8 @@ def det(z,*data):
   logger = logging.getLogger(__name__)
 
   omega  = z[0] +1j*z[1]  # omega/Omega_ci
+  logger.debug("omega = %e+%ei \n",omega.real,omega.imag)
+
   theta  = p['theta'][0]*np.pi/180.
 
   # epsilon is renormalized: epsilon = epsilon*(v_A^2/c^2*omega^2)
@@ -89,7 +91,7 @@ def det(z,*data):
 		      *q**2/beta_para/(k*np.cos(theta))**2
       epsilon[0,2] += -chi0*np.tan(theta)  # typo?
 
-      N = 4
+      N  = int(p['N'][0])
       while(True):
         add_eps = np.zeros((3,3),dtype=complex)
         for n in range(-N,N+1):
@@ -97,9 +99,9 @@ def det(z,*data):
           zh    = np.sqrt((2.*kappa+2.)/(2.*kappa-3.))*(omega-n*q*mu)/\
 		  (np.sqrt(beta_para*mu)*k*np.cos(theta))*np.sqrt(dens)
           jh    = k*np.sin(theta)/q*np.sqrt((2.*kappa-3.)*beta_perp/2./mu/dens)
-	  intxx = complex_quadrature(intgrand,zh,jh,kappa,n,0)
-	  intyy = complex_quadrature(intgrand,zh,jh,kappa,n,1)
-	  intxy = complex_quadrature(intgrand,zh,jh,kappa,n,2)
+          intxx = complex_quadrature(intgrand,zh,jh,kappa,n,0)
+          intyy = complex_quadrature(intgrand,zh,jh,kappa,n,1)
+          intxy = complex_quadrature(intgrand,zh,jh,kappa,n,2)
          
           add_eps[0,0] += 4.*np.sqrt(2.)*mu**1.5*dens**2.5*q**4*(kappa-0.5)*((kappa+1.)/(2.*kappa-3.))**1.5\
              /(beta_perp*(k*np.sin(theta))**2)/(np.sqrt(beta_para)*k*np.cos(theta))*n**2*eta*intxx
@@ -119,6 +121,7 @@ def det(z,*data):
           logger.debug("sp[%d], n=%d satisfies constraint!\n",m,N)
           break
         N += 1
+        logger.debug("sp[%d], Increase N to =%d!\n",m,N)
       epsilon += add_eps
 
     else:
@@ -128,7 +131,7 @@ def det(z,*data):
       epsilon[0,0] += chi0
       epsilon[1,1] += chi0
 
-      N = 4
+      N  = int(p['N'][0])
       while(True):
         add_eps = np.zeros((3,3),dtype=complex)
         for n in range(-N,N+1):
@@ -156,7 +159,7 @@ def det(z,*data):
     k**2*np.sin(theta)*np.cos(theta))-(epsilon[1,1]-k**2)*(epsilon[0,2]+\
     k**2*np.sin(theta)*np.cos(theta))**2+(epsilon[0,0]-(k*np.cos(theta))**2)*\
     epsilon[1,2]**2+(epsilon[2,2]-(k*np.sin(theta))**2)*epsilon[0,1]**2
-  disp_det /= omega
 
+  #disp_det /= omega
   logger.debug("disp_det = %e+%ei \n",disp_det.real,disp_det.imag)
   return (disp_det.real,disp_det.imag)
