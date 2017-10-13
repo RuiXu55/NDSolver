@@ -4,8 +4,8 @@ theta          = 60.         # propagation angle (i.e.between k and B)
 delta          = 0.00001     # omega_ci/omega_pi = va/c
 kappa_limit    = 40          # kappa>limit, automatically switch to bi-maxwellian 
 kstart         = 0.1        # k normalized as k*d_i
-kend           = 1.0          
-ksteps         = 100
+kend           = 0.2          
+ksteps         = 10
 
 < initial_guess >
 

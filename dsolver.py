@@ -16,7 +16,10 @@ __author__ = 'ruix'
 def main(args):
   """ parse command line arguments"""
   tstart = time.clock()
-  logging.basicConfig(level=args.loglevel or logging.INFO)
+  if not args.log :
+    logging.basicConfig(level=args.loglevel or logging.INFO)
+  else:
+    logging.basicConfig(filename='log', filemode='w', level=logging.DEBUG)
   logger = logging.getLogger(__name__)
 
   """ read plasma parameters """
@@ -80,9 +83,11 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Specify command line arguments')
   parser.add_argument('-i','--input', help='Input file name',required=False)
   parser.add_argument('-o','--output',help='Output file name')
+  parser.add_argument('-l','--log', action='store',help='log file')
   parser.add_argument('-v', '--verbose', help='Verbose (debug) logging',
           action='store_const', const=logging.DEBUG,dest='loglevel')
   args = parser.parse_args()
+  print (parser.parse_args())
   sys.exit(main(args))
 
  
