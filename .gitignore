@@ -7,11 +7,13 @@
 
 # module file
 *.pyc
+*.swp
 
 # output file
 *.jpg
 *.png
 *.pdf
+input_*
 
 # directory
 __pycache__/
