@@ -63,7 +63,6 @@ def det(z,*data):
 
   # epsilon is renormalized: epsilon = epsilon*(v_A^2/c^2*omega^2)
   epsilon  = np.zeros((3,3),dtype=complex)
-  epsi     = np.zeros((3,3),dtype=complex)
   epsilon += (p['delta'][0]*omega)**2*np.identity(3)
 
   """ Iterate over species """
@@ -90,36 +89,44 @@ def det(z,*data):
       epsilon[2,2] += 2.*omega**2*(2.*kappa-1.)/(2.*kappa-3.)*dens**2\
 		      *q**2/beta_para/(k*np.cos(theta))**2
       epsilon[0,2] += -chi0*np.tan(theta)  # typo?
-
-      N  = int(p['N'][0])
+      
+      N     = int(p['N'][0])
+      lab   = 0
+      epsi     = np.zeros((3,3),dtype=complex)
       while(True):
         add_eps = np.zeros((3,3),dtype=complex)
         for n in range(-N,N+1):
-          eta   = beta_ratio*omega-(beta_ratio-1.)*n*mu*q
-          zh    = np.sqrt((2.*kappa+2.)/(2.*kappa-3.))*(omega-n*q*mu)/\
-		  (np.sqrt(beta_para*mu)*k*np.cos(theta))*np.sqrt(dens)
-          jh    = k*np.sin(theta)/q*np.sqrt((2.*kappa-3.)*beta_perp/2./mu/dens)
-          intxx = complex_quadrature(intgrand,zh,jh,kappa,n,0)
-          intyy = complex_quadrature(intgrand,zh,jh,kappa,n,1)
-          intxy = complex_quadrature(intgrand,zh,jh,kappa,n,2)
+          # this piece is to avoid unnessary calculation
+          if(lab and abs(n)<=N-1):
+              pass
+          else:
+            eta   = beta_ratio*omega-(beta_ratio-1.)*n*mu*q
+            zh    = np.sqrt((2.*kappa+2.)/(2.*kappa-3.))*(omega-n*q*mu)/\
+                    (np.sqrt(beta_para*mu)*k*np.cos(theta))*np.sqrt(dens)
+            jh    = k*np.sin(theta)/q*np.sqrt((2.*kappa-3.)*beta_perp/2./mu/dens)
+            intxx = complex_quadrature(intgrand,zh,jh,kappa,n,0)
+            intyy = complex_quadrature(intgrand,zh,jh,kappa,n,1)
+            intxy = complex_quadrature(intgrand,zh,jh,kappa,n,2)
          
-          add_eps[0,0] += 4.*np.sqrt(2.)*mu**1.5*dens**2.5*q**4*(kappa-0.5)*((kappa+1.)/(2.*kappa-3.))**1.5\
-             /(beta_perp*(k*np.sin(theta))**2)/(np.sqrt(beta_para)*k*np.cos(theta))*n**2*eta*intxx
-          add_eps[1,1] += 2.*np.sqrt(2.)*chi*(kappa-0.5)/np.sqrt(2.*kappa-3.)*(kappa+1.)**1.5*eta*intyy
-          add_eps[2,2] += 4.*np.sqrt(2.)/np.sqrt(mu)*dens**2.5*q**2*(kappa-0.5)*((kappa+1.)/(2.*kappa-3.0))**1.5\
-             /beta_perp/np.sqrt(beta_para)/(k*np.cos(theta))**3*eta*(omega-n*mu*q)**2*intxx
-          add_eps[0,1] += 4j*mu*dens**2*q**3/np.sqrt(beta_perp*beta_para)/(k**2*np.cos(theta)*np.sin(theta))*\
-             (kappa-0.5)/(2.*kappa-3.)*(kappa+1.)**1.5*n*eta*intxy
-          add_eps[0,2] += 4.*np.sqrt(2.)*np.sqrt(mu)*dens**2.5*q**3*(kappa-0.5)*((kappa+1)/(2.*kappa-3.))**1.5/\
-             beta_perp/(k*np.sin(theta))/np.sqrt(beta_para)/(k*np.cos(theta))**2*n*eta*(omega-n*mu*q)*intxx
-          add_eps[1,2] += -4j*dens**2*q**2*(kappa-0.5)/(2.*kappa-3.)*(kappa+1.)**1.5/np.sqrt(beta_perp*beta_para)\
-             /(k*np.cos(theta))**2*eta*(omega-n*mu*q)*intxy
+            add_eps[0,0] += 4.*np.sqrt(2.)*mu**1.5*dens**2.5*q**4*(kappa-0.5)*((kappa+1.)/(2.*kappa-3.))**1.5\
+              /(beta_perp*(k*np.sin(theta))**2)/(np.sqrt(beta_para)*k*np.cos(theta))*n**2*eta*intxx
+            add_eps[1,1] += 2.*np.sqrt(2.)*chi*(kappa-0.5)/np.sqrt(2.*kappa-3.)*(kappa+1.)**1.5*eta*intyy
+            add_eps[2,2] += 4.*np.sqrt(2.)/np.sqrt(mu)*dens**2.5*q**2*(kappa-0.5)*((kappa+1.)/(2.*kappa-3.0))**1.5\
+              /beta_perp/np.sqrt(beta_para)/(k*np.cos(theta))**3*eta*(omega-n*mu*q)**2*intxx
+            add_eps[0,1] += 4j*mu*dens**2*q**3/np.sqrt(beta_perp*beta_para)/(k**2*np.cos(theta)*np.sin(theta))*\
+              (kappa-0.5)/(2.*kappa-3.)*(kappa+1.)**1.5*n*eta*intxy
+            add_eps[0,2] += 4.*np.sqrt(2.)*np.sqrt(mu)*dens**2.5*q**3*(kappa-0.5)*((kappa+1)/(2.*kappa-3.))**1.5/\
+              beta_perp/(k*np.sin(theta))/np.sqrt(beta_para)/(k*np.cos(theta))**2*n*eta*(omega-n*mu*q)*intxx
+            add_eps[1,2] += -4j*dens**2*q**2*(kappa-0.5)/(2.*kappa-3.)*(kappa+1.)**1.5/np.sqrt(beta_perp*beta_para)\
+              /(k*np.cos(theta))**2*eta*(omega-n*mu*q)*intxy
+        add_eps += epsi
 
         # check if we should increase N
         epsi,var = check_eps(epsi,add_eps,N,p['eps_error'][0])
         if(var):
           logger.debug("sp[%d], n=%d satisfies constraint!\n",m,N)
           break
+        lab = 1
         N += 1
         logger.debug("sp[%d], Increase N to =%d!\n",m,N)
       epsilon += add_eps
@@ -170,6 +177,7 @@ def det_para(z,*data):
 
   omega    = z[0] +1j*z[1]  # omega/Omega_ci
   disp_det = (p['delta'][0]*omega)**2-k**2
+  pol = p['polarization'][0]
   for m in range(int(p['Nsp'][0])):
     beta_perp  = p['beta_perp'][m]
     beta_para  = p['beta_para'][m]
@@ -179,8 +187,15 @@ def det_para(z,*data):
     dens       = p['dens'][m]
     mu         = p['mu'][m]
     q          = p['q'][m]
-    ze         = ak*(omega+mu*q)/k/np.sqrt(beta_para)
-    ze0        = ak*omega/k/np.sqrt(beta_para)
-    disp_det  += dens*mu*q**2*(ze0*f.Zk_para(ze,kap)+(beta_ratio-1.)*(1.+ze*f.Zk_para(ze,kap)))
+
+    #ze         = ak*(omega+mu*q)/k/np.sqrt(beta_para)*((kap-1)/kap)**0.5/np.sqrt(mu)
+    #ze0        = ak*omega/k/np.sqrt(beta_para)/np.sqrt(mu)
+    #disp_det  += dens*mu*q**2*(ze0*(kap/(kap-1.5))*((kap-1)/kap)**1.5*f.Zk(ze,kap-1)+\
+    #        (beta_ratio-1.)*(1.+(kap-1.)/(kap-1.5)*ze*f.Zk(ze,kap-1)))
+
+    ze         = ak*(omega+(-1)**pol*mu*q)/(k*np.sqrt(beta_para*mu))
+    ze0        = ak*omega/(k*np.sqrt(beta_para*mu))
+    disp_det  += dens*mu*q**2*(ze0*f.Zk_para(ze,kap)+\
+            (beta_ratio-1.)*(1.+ze*f.Zk_para(ze,kap)))
 
   return (disp_det.real,disp_det.imag)

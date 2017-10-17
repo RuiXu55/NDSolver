@@ -3,14 +3,15 @@
 theta          = 45.         # propagation angle (i.e.between k and B)
 delta          = 0.00001     # omega_ci/omega_pi = va/c
 kappa_limit    = 40          # kappa>limit, automatically switch to bi-maxwellian 
-kstart         = 0.1        # k normalized as k*d_i
-kend           = 1.0          
-ksteps         = 100
+kstart         = 0.1         # k normalized as k*d_i
+kend           = 0.5          
+ksteps         = 50
+polarization   = 1           # for parallel propagation only,1=right,2=left 
 
 < initial_guess >
 
-omega_r        = 0.000001    # real part
-omega_i        = 0.1         # imag part
+omega_r        = 0.0000009    # real part
+omega_i        = 0.09         # imag part
 
 < plasma > 
 
@@ -19,17 +20,16 @@ Nsp            = 2           # #of species
 q              = 1.0         # charge (unit for other species)
 mu             = 1.0         # mass (m_i/m unit for other species)
 dens           = 1.0         # density (unit for other species)
-beta_para      = 3           # plasma_beta_parallel
-beta_perp      = 0.5         # plasma_beta_perp
-kappa          = 4          # kappa 
-
+beta_para      = 4.          # plasma_beta_parallel
+beta_perp      = 1.956       # plasma_beta_perp
+kappa          = 8          # kappa 
 < second species ---------- #
 q              = -1.0
-mu             = 100.
+mu             = 1836.
 dens           = 1.0
-beta_para      = 1.333
-beta_perp      = 1.333 
-kappa          = 4
+beta_para      = 2.637
+beta_perp      = 2.637
+kappa          = 8
 
 < accuracy >
 
