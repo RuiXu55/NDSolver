@@ -11,7 +11,7 @@ args = parser.parse_args()
 
 if __name__ == '__main__':
   if not args.input :
-    data = np.load('output1.npy').item()
+    data = np.load('output.npy').item()
   else:
     data = np.load(args.input+'.npy').item()
   plt.plot(data['wave_k'],data['fzeta'].imag,lw=2,label='imag')
