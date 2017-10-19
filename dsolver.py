@@ -62,7 +62,7 @@ def main(args):
         sol = root(disp.det,(zeta_guess.real,zeta_guess.imag), \
             args=data,method='hybr',tol=param['sol_err'][0]) 
         fzeta[n] = complex(sol.x[0],sol.x[1])
-      logger.info("solution: k=%f , zeta=%e+%ei\n",wave_k[n],fzeta[n].real, fzeta[n].imag)
+      logger.info("solution: k*di=%1.2e , omega/Omega_ci=%1.2e+%1.2ei\n",wave_k[n],fzeta[n].real, fzeta[n].imag)
     except ValueError:
       logger.info('ERROR in root finding: wave_k =%f',wave_k[n])
 
@@ -82,7 +82,7 @@ def main(args):
     np.save('output.npy', param)
 
   tend = time.clock()
-  logger.info('\n Total time lapse: %f\n',tend-tstart)
+  logger.info('\n Total time lapse: %1.2e\n',tend-tstart)
   return  0
 
 if __name__ == '__main__':

@@ -36,5 +36,5 @@ kappa          = 4
 N              = 5            # initial N for Besell summation,N<5
 eps_error      = 1.0e-4       # epsilon calculation error
 sol_err        = 1.0e-4       # root finding error
-exp            = 2
+exp            = 2            # disp/omega**exp to avoid trivial solutions
 

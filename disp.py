@@ -57,9 +57,8 @@ def det(z,*data):
   logger = logging.getLogger(__name__)
 
   omega  = z[0] +1j*z[1]  # omega/Omega_ci
-  logger.debug("omega = %e+%ei \n",omega.real,omega.imag)
-
   theta  = p['theta'][0]*np.pi/180.
+  logger.debug("omega guess = %e+%ei \n",omega.real,omega.imag)
 
   # epsilon is renormalized: epsilon = epsilon*(v_A^2/c^2*omega^2)
   epsilon  = np.zeros((3,3),dtype=complex)
@@ -96,9 +95,9 @@ def det(z,*data):
       while(True):
         add_eps = np.zeros((3,3),dtype=complex)
         for n in range(-N,N+1):
-          # this piece is to avoid unnessary calculation
+          # this piece is to avoid unnessary function evaluation
           if(lab and abs(n)<=N-1):
-              pass
+            pass
           else:
             eta   = beta_ratio*omega-(beta_ratio-1.)*n*mu*q
             zh    = np.sqrt((2.*kappa+2.)/(2.*kappa-3.))*(omega-n*q*mu)/\
@@ -121,7 +120,7 @@ def det(z,*data):
               /(k*np.cos(theta))**2*eta*(omega-n*mu*q)*intxy
         add_eps += epsi
 
-        # check if we should increase N
+        # check if we should increase N, and copy add_eps value to epsi
         epsi,var = check_eps(epsi,add_eps,N,p['eps_error'][0])
         if(var):
           logger.debug("sp[%d], n=%d satisfies constraint!\n",m,N)
@@ -138,26 +137,37 @@ def det(z,*data):
       epsilon[0,0] += chi0
       epsilon[1,1] += chi0
 
-      N  = int(p['N'][0])
+      N     = int(p['N'][0])
+      lab   = 0
+      epsi     = np.zeros((3,3),dtype=complex)
       while(True):
         add_eps = np.zeros((3,3),dtype=complex)
         for n in range(-N,N+1):
-          eta  = beta_ratio*omega-(beta_ratio-1.)*n*mu*q
-          zeta = (omega-n*mu*q)/np.sqrt(beta_para)/(k*np.cos(theta))/np.sqrt(mu)*np.sqrt(dens)
-          add_eps[0,0] += chi*n**2*sp.ive(n,Lam)/Lam*eta*f.Z(zeta)
-          add_eps[0,1] += j*chi*n*(f.dive(n,Lam,1)-sp.ive(n,Lam))*eta*f.Z(zeta)
-          add_eps[0,2] += -mu*dens**2*q**3/beta_perp/(k**2*np.sin(theta)*np.cos(theta))*eta*\
-              n*sp.ive(n,Lam)*f.dp(zeta,0)
-          add_eps[1,1] += chi*(n**2*sp.ive(n,Lam)/Lam-2.*Lam*(f.dive(n,Lam,1)-sp.ive(n,Lam)))*eta*f.Z(zeta)
-          add_eps[1,2] += j/2.*dens*q*np.tan(theta)*eta*(f.dive(n,Lam,1)-sp.ive(n,Lam))*f.dp(zeta,0)
-          add_eps[2,2] += -dens**2*q**2*(omega-n*mu*q)/beta_perp/(k*np.cos(theta))**2*eta*\
-              sp.ive(n,Lam)*f.dp(zeta,0)
+          # this piece is to avoid unnessary function evaluation
+          if(lab and abs(n)<=N-1):
+            pass
+          else:
+            eta  = beta_ratio*omega-(beta_ratio-1.)*n*mu*q
+            zeta = (omega-n*mu*q)*np.sqrt(dens)/(np.sqrt(beta_para*mu)*k*np.cos(theta))
+            add_eps[0,0] += chi*n**2*sp.ive(n,Lam)/Lam*eta*f.Z(zeta)
+            add_eps[0,1] += 1j*chi*n*(f.dive(n,Lam,1)-sp.ive(n,Lam))*eta*f.Z(zeta)
+            # below add by Rui based on DSHARK
+            add_eps[0,1] += 1j*mu*q**2*n*(f.dive(n,Lam,1)-sp.ive(n,Lam))*(beta_ratio-1.)
+            add_eps[0,2] += -mu*dens**2*q**3/beta_perp/(k**2*np.sin(theta)*np.cos(theta))*eta*\
+                n*sp.ive(n,Lam)*f.dp(zeta,0)
+            add_eps[1,1] += chi*(n**2*sp.ive(n,Lam)/Lam-2.*Lam*(f.dive(n,Lam,1)-sp.ive(n,Lam)))*eta*f.Z(zeta)
+            add_eps[1,2] += 1j/2.*dens*q*np.tan(theta)*eta*(f.dive(n,Lam,1)-sp.ive(n,Lam))*f.dp(zeta,0)
+            add_eps[2,2] += -dens**2*q**2*(omega-n*mu*q)/beta_perp/(k*np.cos(theta))**2*eta*\
+               sp.ive(n,Lam)*f.dp(zeta,0)
+        add_eps += epsi
         # check if we should increase N
         epsi,var = check_eps(epsi,add_eps,N,p['eps_error'][0])
         if(var):
           logger.debug("sp[%d], n=%d satisfies constraint!\n",m,N)
           break
+        lab = 1
         N += 1
+        logger.debug("sp[%d], Increase N to =%d!\n",m,N)
       epsilon += add_eps
 
   ''' calculate det '''
@@ -188,14 +198,14 @@ def det_para(z,*data):
     mu         = p['mu'][m]
     q          = p['q'][m]
 
-    #ze         = ak*(omega+mu*q)/k/np.sqrt(beta_para)*((kap-1)/kap)**0.5/np.sqrt(mu)
-    #ze0        = ak*omega/k/np.sqrt(beta_para)/np.sqrt(mu)
-    #disp_det  += dens*mu*q**2*(ze0*(kap/(kap-1.5))*((kap-1)/kap)**1.5*f.Zk(ze,kap-1)+\
-    #        (beta_ratio-1.)*(1.+(kap-1.)/(kap-1.5)*ze*f.Zk(ze,kap-1)))
-
     ze         = ak*(omega+(-1)**pol*mu*q)/(k*np.sqrt(beta_para*mu))
     ze0        = ak*omega/(k*np.sqrt(beta_para*mu))
     disp_det  += dens*mu*q**2*(ze0*f.Zk_para(ze,kap)+\
             (beta_ratio-1.)*(1.+ze*f.Zk_para(ze,kap)))
 
+    ''' from summers 1994'''
+    #ze         = ak*(omega+mu*q)/k/np.sqrt(beta_para)*((kap-1)/kap)**0.5/np.sqrt(mu)
+    #ze0        = ak*omega/k/np.sqrt(beta_para)/np.sqrt(mu)
+    #disp_det  += dens*mu*q**2*(ze0*(kap/(kap-1.5))*((kap-1)/kap)**1.5*f.Zk(ze,kap-1)+\
+    #        (beta_ratio-1.)*(1.+(kap-1.)/(kap-1.5)*ze*f.Zk(ze,kap-1)))
   return (disp_det.real,disp_det.imag)
