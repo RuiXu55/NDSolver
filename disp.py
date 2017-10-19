@@ -20,7 +20,7 @@ intgrand for kappa-distribution dispersion
 '''
 def intgrand(s,*args):
   h1,h2,kappa,n,case = args
-  Zk = f.Zk(h1/np.sqrt(s),int(kappa+1))
+  Zk = f.Zk(h1/np.sqrt(s),kappa+1)
   # in epsilon[0,0], epsilon[0,2],epsilon[2,2]
   if  (case==0):
     return sp.jv(n,h2*np.sqrt(s-1.))**2/(s**(kappa+2.))*Zk
@@ -34,15 +34,16 @@ def intgrand(s,*args):
   else:
     sys.exit("FATAL ERROR in function intgrand: case does not exist! \n")
 
+''' integrate complex function in real-axis '''
 def complex_quadrature(intgrand,zh,jh,kappa,n,case):
   data = (zh,jh,kappa,n,case)
   def real_func(x,*args):
     return scipy.real(intgrand(x,*args))
   def imag_func(x,*args):
     return scipy.imag(intgrand(x,*args))
-  real_integral = quad(real_func, 1, np.inf, args=data)
-  imag_integral = quad(imag_func, 1, np.inf, args=data)
-  return (real_integral[0] + 1j*imag_integral[0])
+  int_real = quad(real_func, 1, np.inf, args=data)
+  int_imag = quad(imag_func, 1, np.inf, args=data)
+  return (int_real[0] + 1j*int_imag[0])
 
 ''' General dispersion relation for bi-maxwellian & kappa distribution '''
 def det(z,*data):
@@ -66,12 +67,11 @@ def det(z,*data):
     dens       = p['dens'][m]
     mu         = p['mu'][m]
     q          = p['q'][m]
-    kappa      = int(p['kappa'][m])
+    kappa      = int(p['kappa'][m]) # right now only integer kappa is supported
 
-    ''' chiX shortcut for long terms '''
+    ''' chiX shortcuts for long terms '''
     chi        = dens**1.5*q**2*np.sqrt(mu/beta_para)/(k*np.cos(theta))
     chi0       = (beta_ratio-1.)*mu*dens*q**2
-
     ''' use kappa dispersion relation '''
     if(kappa<p['kappa_limit'][0]):
 
@@ -86,21 +86,21 @@ def det(z,*data):
       N     = int(p['N'][0])
       lab   = 0
       epsi     = np.zeros((3,3),dtype=complex)
-      while(True):
+      while True :
         add_eps = np.zeros((3,3),dtype=complex)
         for n in range(-N,N+1):
           # this piece is to avoid unnessary function evaluation
           if(lab and abs(n)<=N-1):
             pass
           else:
-            eta   = beta_ratio*omega-(beta_ratio-1.)*n*mu*q
+            eta   = beta_ratio*omega-(beta_ratio-1.)*n*mu*q # shortcut
             zh    = np.sqrt((2.*kappa+2.)/(2.*kappa-3.))*(omega-n*q*mu)/\
                     (np.sqrt(beta_para*mu)*k*np.cos(theta))*np.sqrt(dens)
-            jh    = k*np.sin(theta)/q*np.sqrt((2.*kappa-3.)*beta_perp/2./mu/dens)
+            jh    = k*np.sin(theta)*np.sqrt((2.*kappa-3.)*beta_perp/2./mu/dens)/q
             intxx = complex_quadrature(intgrand,zh,jh,kappa,n,0)
             intyy = complex_quadrature(intgrand,zh,jh,kappa,n,1)
             intxy = complex_quadrature(intgrand,zh,jh,kappa,n,2)
-         
+
             add_eps[0,0] += 4.*np.sqrt(2.)*mu**1.5*dens**2.5*q**4*(kappa-0.5)*((kappa+1.)/(2.*kappa-3.))**1.5\
               /(beta_perp*(k*np.sin(theta))**2)/(np.sqrt(beta_para)*k*np.cos(theta))*n**2*eta*intxx
             add_eps[1,1] += 2.*np.sqrt(2.)*chi*(kappa-0.5)/np.sqrt(2.*kappa-3.)*(kappa+1.)**1.5*eta*intyy
@@ -118,7 +118,6 @@ def det(z,*data):
         if(var):
           logger.debug("sp[%d], n=%d satisfies constraint!\n",m,N)
           break
-        #add_eps += epsi
         epsi    += add_eps
         lab      = 1
         N       += 1
@@ -145,13 +144,11 @@ def det(z,*data):
             eta  = beta_ratio*omega-(beta_ratio-1.)*n*mu*q
             zeta = (omega-n*mu*q)*np.sqrt(dens)/(np.sqrt(beta_para*mu)*k*np.cos(theta))
             add_eps[0,0] += chi*n**2*sp.ive(n,Lam)/Lam*eta*f.Z(zeta)
-            add_eps[0,1] += 1j*chi*n*(f.dive(n,Lam,1)-sp.ive(n,Lam))*eta*f.Z(zeta)
-            # below add by Rui based on DSHARK
-            add_eps[0,1] += 1j*mu*q**2*n*(f.dive(n,Lam,1)-sp.ive(n,Lam))*(beta_ratio-1.)
+            add_eps[0,1] += 1j*chi*n*(f.dIne(n,Lam)-sp.ive(n,Lam))*eta*f.Z(zeta)
             add_eps[0,2] += -mu*dens**2*q**3/beta_perp/(k**2*np.sin(theta)*np.cos(theta))*eta*\
                 n*sp.ive(n,Lam)*f.dp(zeta,0)
-            add_eps[1,1] += chi*(n**2*sp.ive(n,Lam)/Lam-2.*Lam*(f.dive(n,Lam,1)-sp.ive(n,Lam)))*eta*f.Z(zeta)
-            add_eps[1,2] += 1j/2.*dens*q*np.tan(theta)*eta*(f.dive(n,Lam,1)-sp.ive(n,Lam))*f.dp(zeta,0)
+            add_eps[1,1] += chi*(n**2*sp.ive(n,Lam)/Lam-2.*Lam*(f.dIne(n,Lam)-sp.ive(n,Lam)))*eta*f.Z(zeta)
+            add_eps[1,2] += 1j/2.*dens*q*np.tan(theta)*eta*(f.dIne(n,Lam)-sp.ive(n,Lam))*f.dp(zeta,0)
             add_eps[2,2] += -dens**2*q**2*(omega-n*mu*q)/beta_perp/(k*np.cos(theta))**2*eta*\
                sp.ive(n,Lam)*f.dp(zeta,0)
         # check if we should increase N
@@ -164,6 +161,7 @@ def det(z,*data):
         epsi    += add_eps
         logger.debug("sp[%d], Increase N to =%d!\n",m,N)
       epsilon += epsi
+
 
   ''' calculate det '''
   disp_det = (epsilon[0,0]-(k*np.cos(theta))**2)*(epsilon[1,1]-k**2)*(epsilon[2,2]-\
@@ -204,3 +202,7 @@ def det_para(z,*data):
     #disp_det  += dens*mu*q**2*(ze0*(kap/(kap-1.5))*((kap-1)/kap)**1.5*f.Zk(ze,kap-1)+\
     #        (beta_ratio-1.)*(1.+(kap-1.)/(kap-1.5)*ze*f.Zk(ze,kap-1)))
   return (disp_det.real,disp_det.imag)
+
+
+if __name__ == '__main__':
+  print ('dispersion relation dielectric tensor.')

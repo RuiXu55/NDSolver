@@ -11,9 +11,9 @@ args = parser.parse_args()
 
 colors=['r','k','g','c','m']
 if __name__ == '__main__':
-  for i in range(0,2):
+  for i in range(0,3):
     if not args.input :
-      data = np.load('output'+str(i+1)+'.npy').item()
+      data = np.load('utput'+str(i+1)+'.npy').item()
     else:
       data = np.load(args.input+str(i+1)+'.npy').item()
     plt.plot(data['wave_k'],data['fzeta'].imag,lw=2,c=colors[i],linestyle='-',label='imag[%d]'%i)

@@ -5,7 +5,7 @@
 
 import sys
 import time
-import disp
+import disp as disp
 import logging 
 import argparse
 import numpy as np

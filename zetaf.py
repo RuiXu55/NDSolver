@@ -118,7 +118,10 @@ def dive(n,a,i):
     else:
       sys.exit("Error:i should be 1 or 2 for dive function!")
   return fz
- 
+
+# dIne(n,a_s)= I_n^prime(a_s)*exp(-a_s)
+def dIne(n,a):
+  return 0.5*(sp.ive(n-1,a)+sp.ive(n+1,a))
 
 if __name__ == '__main__':
   print ('Public functions related to plasma \zeta function')
