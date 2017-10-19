@@ -7,19 +7,13 @@ import scipy.special as sp
 from scipy.integrate import quad
 
 # check whether the summation over n is already accurate enough
-def check_eps(epsi,eps,N,err):
+def check_eps(epsi,add_eps,err,lab):
   zipped = zip([0,0,0,1,1,2],[0,1,2,1,2,2])
-  if ((N<=5) or sum(abs((epsi[i,j].real-eps[i,j].real)/epsi[i,j].real)>err for i,j in zipped) or \
-   sum(abs((epsi[i,j].imag-eps[i,j].imag)/epsi[i,j].imag)>err for i,j in zipped)):
-    var = False
+  if ((lab==0) or sum(abs(add_eps[i,j].real/epsi[i,j].real)>err for i,j in zipped) or \
+   sum(abs(add_eps[i,j].imag/epsi[i,j].imag)>err for i,j in zipped)):
+    return False
   else:
-    var = True
-  for i,j in zipped:
-    epsi[i,j] = eps[i,j]
-  if(N>=10):
-    var = True
-  return epsi,var
-
+    return True
 
 '''
 intgrand for kappa-distribution dispersion
@@ -118,17 +112,18 @@ def det(z,*data):
               beta_perp/(k*np.sin(theta))/np.sqrt(beta_para)/(k*np.cos(theta))**2*n*eta*(omega-n*mu*q)*intxx
             add_eps[1,2] += -4j*dens**2*q**2*(kappa-0.5)/(2.*kappa-3.)*(kappa+1.)**1.5/np.sqrt(beta_perp*beta_para)\
               /(k*np.cos(theta))**2*eta*(omega-n*mu*q)*intxy
-        add_eps += epsi
 
         # check if we should increase N, and copy add_eps value to epsi
-        epsi,var = check_eps(epsi,add_eps,N,p['eps_error'][0])
+        var = check_eps(epsi,add_eps,p['eps_error'][0],lab)
         if(var):
           logger.debug("sp[%d], n=%d satisfies constraint!\n",m,N)
           break
-        lab = 1
-        N += 1
+        #add_eps += epsi
+        epsi    += add_eps
+        lab      = 1
+        N       += 1
         logger.debug("sp[%d], Increase N to =%d!\n",m,N)
-      epsilon += add_eps
+      epsilon += epsi
 
     else:
       '''use bi-maxwellian dispersion'''
@@ -159,16 +154,16 @@ def det(z,*data):
             add_eps[1,2] += 1j/2.*dens*q*np.tan(theta)*eta*(f.dive(n,Lam,1)-sp.ive(n,Lam))*f.dp(zeta,0)
             add_eps[2,2] += -dens**2*q**2*(omega-n*mu*q)/beta_perp/(k*np.cos(theta))**2*eta*\
                sp.ive(n,Lam)*f.dp(zeta,0)
-        add_eps += epsi
         # check if we should increase N
-        epsi,var = check_eps(epsi,add_eps,N,p['eps_error'][0])
+        var = check_eps(epsi,add_eps,p['eps_error'][0],lab)
         if(var):
           logger.debug("sp[%d], n=%d satisfies constraint!\n",m,N)
           break
         lab = 1
         N += 1
+        epsi    += add_eps
         logger.debug("sp[%d], Increase N to =%d!\n",m,N)
-      epsilon += add_eps
+      epsilon += epsi
 
   ''' calculate det '''
   disp_det = (epsilon[0,0]-(k*np.cos(theta))**2)*(epsilon[1,1]-k**2)*(epsilon[2,2]-\
