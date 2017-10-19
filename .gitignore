@@ -13,9 +13,10 @@
 *.jpg
 *.png
 *.pdf
-input_*
 
 # directory
 __pycache__/
 tst/
 tmp/
+*_vis*
+input_*
