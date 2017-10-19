@@ -15,7 +15,6 @@ if __name__ == '__main__':
     data = np.load(args.input+'.npy').item()
   plt.plot(data['wave_k'],data['fzeta'].imag,lw=2,label='Imag')
   plt.plot(data['wave_k'],data['fzeta'].real,lw=2,label='Real')
-  plt.axhline(y=0.083)
   plt.xlabel('$kd_i$')
   plt.ylabel('$\omega/\Omega_i$')
   plt.legend()
