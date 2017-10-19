@@ -11,9 +11,9 @@ def check_eps(epsi,add_eps,err,lab):
   zipped = zip([0,0,0,1,1,2],[0,1,2,1,2,2])
   if ((lab==0) or sum(abs(add_eps[i,j].real/epsi[i,j].real)>err for i,j in zipped) or \
    sum(abs(add_eps[i,j].imag/epsi[i,j].imag)>err for i,j in zipped)):
-    return False
+    return True,False
   else:
-    return True
+    return True,True
 
 '''
 intgrand for kappa-distribution dispersion
@@ -34,7 +34,7 @@ def intgrand(s,*args):
   else:
     sys.exit("FATAL ERROR in function intgrand: case does not exist! \n")
 
-''' integrate complex function in real-axis '''
+''' integrate complex function along real-axis '''
 def complex_quadrature(intgrand,zh,jh,kappa,n,case):
   data = (zh,jh,kappa,n,case)
   def real_func(x,*args):
@@ -45,7 +45,10 @@ def complex_quadrature(intgrand,zh,jh,kappa,n,case):
   int_imag = quad(imag_func, 1, np.inf, args=data)
   return (int_real[0] + 1j*int_imag[0])
 
-''' General dispersion relation for bi-maxwellian & kappa distribution '''
+''' 
+General dispersion relation for bi-maxwellian & kappa distribution
+adopted from Astfalk et. al. 2015
+'''
 def det(z,*data):
   args,p,k = data
   logging.basicConfig(level=args.loglevel or logging.INFO)
@@ -72,6 +75,7 @@ def det(z,*data):
     ''' chiX shortcuts for long terms '''
     chi        = dens**1.5*q**2*np.sqrt(mu/beta_para)/(k*np.cos(theta))
     chi0       = (beta_ratio-1.)*mu*dens*q**2
+
     ''' use kappa dispersion relation '''
     if(kappa<p['kappa_limit'][0]):
 
@@ -114,13 +118,12 @@ def det(z,*data):
               /(k*np.cos(theta))**2*eta*(omega-n*mu*q)*intxy
 
         # check if we should increase N, and copy add_eps value to epsi
-        var = check_eps(epsi,add_eps,p['eps_error'][0],lab)
+        lab,var = check_eps(epsi,add_eps,p['eps_error'][0],lab)
         if(var):
           logger.debug("sp[%d], n=%d satisfies constraint!\n",m,N)
           break
-        epsi    += add_eps
-        lab      = 1
-        N       += 1
+        epsi += add_eps
+        N    += 1
         logger.debug("sp[%d], Increase N to =%d!\n",m,N)
       epsilon += epsi
 
@@ -152,18 +155,17 @@ def det(z,*data):
             add_eps[2,2] += -dens**2*q**2*(omega-n*mu*q)/beta_perp/(k*np.cos(theta))**2*eta*\
                sp.ive(n,Lam)*f.dp(zeta,0)
         # check if we should increase N
-        var = check_eps(epsi,add_eps,p['eps_error'][0],lab)
+        lab, var = check_eps(epsi,add_eps,p['eps_error'][0],lab)
         if(var):
           logger.debug("sp[%d], n=%d satisfies constraint!\n",m,N)
           break
-        lab = 1
-        N += 1
-        epsi    += add_eps
+        N     += 1
+        epsi  += add_eps
         logger.debug("sp[%d], Increase N to =%d!\n",m,N)
       epsilon += epsi
 
 
-  ''' calculate det '''
+  ''' calculate determinant '''
   disp_det = (epsilon[0,0]-(k*np.cos(theta))**2)*(epsilon[1,1]-k**2)*(epsilon[2,2]-\
     (k*np.sin(theta))**2)+2.0*epsilon[0,1]*epsilon[1,2]*(epsilon[0,2]+\
     k**2*np.sin(theta)*np.cos(theta))-(epsilon[1,1]-k**2)*(epsilon[0,2]+\
@@ -171,38 +173,35 @@ def det(z,*data):
     epsilon[1,2]**2+(epsilon[2,2]-(k*np.sin(theta))**2)*epsilon[0,1]**2
 
   disp_det /= omega**p['exp'][0]
-  logger.debug("disp_det = %e+%ei \n",disp_det.real,disp_det.imag)
+  logger.debug('for omega=',omega,"disp_det = %e+%ei \n",disp_det.real,disp_det.imag)
   return (disp_det.real,disp_det.imag)
 
-""" dispersion relation for parallal propagation """
+""" 
+dispersion relation for parallal propagation 
+from Lazar et al. 2011    
+"""
 def det_para(z,*data):
   args,p,k = data
+  logging.basicConfig(level=args.loglevel or logging.INFO)
+  logger = logging.getLogger(__name__)
 
   omega    = z[0] +1j*z[1]  # omega/Omega_ci
   disp_det = (p['delta'][0]*omega)**2-k**2
-  pol = p['polarization'][0]
+  pol      = p['polarization'][0]
   for m in range(int(p['Nsp'][0])):
-    beta_perp  = p['beta_perp'][m]
-    beta_para  = p['beta_para'][m]
-    beta_ratio = beta_perp/beta_para
-    kap        = int(p['kappa'][m])
-    ak         = np.sqrt(2.*kap/(2.*kap-3.))
-    dens       = p['dens'][m]
-    mu         = p['mu'][m]
-    q          = p['q'][m]
+    beta_perp = p['beta_perp'][m]
+    beta_para = p['beta_para'][m]
+    kap       = int(p['kappa'][m])
+    dens      = p['dens'][m]
+    mu        = p['mu'][m]
+    q         = p['q'][m]
 
-    ze         = ak*(omega+(-1)**pol*mu*q)/(k*np.sqrt(beta_para*mu))
-    ze0        = ak*omega/(k*np.sqrt(beta_para*mu))
-    disp_det  += dens*mu*q**2*(ze0*f.Zk_para(ze,kap)+\
-            (beta_ratio-1.)*(1.+ze*f.Zk_para(ze,kap)))
-
-    ''' from summers 1994'''
-    #ze         = ak*(omega+mu*q)/k/np.sqrt(beta_para)*((kap-1)/kap)**0.5/np.sqrt(mu)
-    #ze0        = ak*omega/k/np.sqrt(beta_para)/np.sqrt(mu)
-    #disp_det  += dens*mu*q**2*(ze0*(kap/(kap-1.5))*((kap-1)/kap)**1.5*f.Zk(ze,kap-1)+\
-    #        (beta_ratio-1.)*(1.+(kap-1.)/(kap-1.5)*ze*f.Zk(ze,kap-1)))
+    ze        = np.sqrt(2.*kap/(2.*kap-3.))*(omega+(-1)**pol*mu*q)/(k*np.sqrt(beta_para*mu))
+    ze0       = np.sqrt(2.*kap/(2.*kap-3.))*omega/(k*np.sqrt(beta_para*mu))
+    disp_det += dens*mu*q**2*(ze0*f.Zk_para(ze,kap)+\
+                (beta_perp/beta_para-1.)*(1.+ze*f.Zk_para(ze,kap)))
+  logger.debug('for omega=',omega,"disp_det = %e+%ei \n",disp_det.real,disp_det.imag)
   return (disp_det.real,disp_det.imag)
-
 
 if __name__ == '__main__':
   print ('dispersion relation dielectric tensor.')
