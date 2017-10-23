@@ -17,6 +17,9 @@
 # directory
 __pycache__/
 tst/
+tests/
+plots/
 tmp/
 *_vis*
 input_*
+*2d*

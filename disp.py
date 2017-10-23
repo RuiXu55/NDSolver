@@ -4,7 +4,9 @@ import logging
 import zetaf as f
 import numpy as np
 import scipy.special as sp
+from numpy import linalg as LA
 from scipy.integrate import quad
+
 
 # check whether the summation over n is already accurate enough
 def check_eps(epsi,add_eps,err,lab):
@@ -163,22 +165,29 @@ def det(z,*data):
         epsi  += add_eps
         logger.debug("sp[%d], Increase N to =%d!\n",m,N)
       epsilon += epsi
-
-
+  epsilon[1,0]  = -epsilon[0,1]
+  epsilon[2,0]  = epsilon[0,2]
+  epsilon[2,1]  = -epsilon[1,2]
+  epsilon[0,0] += -(k*np.cos(theta))**2
+  epsilon[1,1] += -k**2
+  epsilon[2,2] += -(k*np.sin(theta))**2
+  epsilon[0,2] += k**2*np.sin(theta)*np.cos(theta)
+  epsilon[2,0] += k**2*np.sin(theta)*np.cos(theta)
   ''' calculate determinant '''
-  disp_det = (epsilon[0,0]-(k*np.cos(theta))**2)*(epsilon[1,1]-k**2)*(epsilon[2,2]-\
-    (k*np.sin(theta))**2)+2.0*epsilon[0,1]*epsilon[1,2]*(epsilon[0,2]+\
-    k**2*np.sin(theta)*np.cos(theta))-(epsilon[1,1]-k**2)*(epsilon[0,2]+\
-    k**2*np.sin(theta)*np.cos(theta))**2+(epsilon[0,0]-(k*np.cos(theta))**2)*\
-    epsilon[1,2]**2+(epsilon[2,2]-(k*np.sin(theta))**2)*epsilon[0,1]**2
+  disp_det = LA.det(epsilon)/omega**p['exp'][0]
 
-  disp_det /= omega**p['exp'][0]
+  ''' calculate polarization 
+  val = np.ones(3,dtype =complex)    # eigenvalue 
+  vec = np.ones((3,3),dtype=complex) # eigenvectors 
+  val, vec = LA.eig(epsilon)
+  pol = 1j*vec[1]/vec[0]*omega.real/abs(omega.real)
+  '''
   logger.debug('for omega=',omega,"disp_det = %e+%ei \n",disp_det.real,disp_det.imag)
   return (disp_det.real,disp_det.imag)
 
 """ 
 dispersion relation for parallal propagation 
-from Lazar et al. 2011    
+from Lazar et al. 2011 and Gary & Madland 1985   
 """
 def det_para(z,*data):
   args,p,k = data
@@ -186,8 +195,9 @@ def det_para(z,*data):
   logger = logging.getLogger(__name__)
 
   omega    = z[0] +1j*z[1]  # omega/Omega_ci
-  disp_det = (p['delta'][0]*omega)**2-k**2
   pol      = p['polarization'][0]
+  disp_det = (p['delta'][0]*omega)**2-k**2
+  ''' bi-kappa from Lazar et. al. 2011 '''
   for m in range(int(p['Nsp'][0])):
     beta_perp = p['beta_perp'][m]
     beta_para = p['beta_para'][m]
@@ -199,7 +209,7 @@ def det_para(z,*data):
     ze        = np.sqrt(2.*kap/(2.*kap-3.))*(omega+(-1)**pol*mu*q)/(k*np.sqrt(beta_para*mu))
     ze0       = np.sqrt(2.*kap/(2.*kap-3.))*omega/(k*np.sqrt(beta_para*mu))
     disp_det += dens*mu*q**2*(ze0*f.Zk_para(ze,kap)+\
-                (beta_perp/beta_para-1.)*(1.+ze*f.Zk_para(ze,kap)))
+                    (beta_perp/beta_para-1.)*(1.+ze*f.Zk_para(ze,kap)))
   logger.debug('for omega=',omega,"disp_det = %e+%ei \n",disp_det.real,disp_det.imag)
   return (disp_det.real,disp_det.imag)
 

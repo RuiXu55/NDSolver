@@ -7,11 +7,12 @@ kstart         = 0.1         # k normalized as k*d_i
 kend           = 0.5          
 ksteps         = 50
 polarization   = 1           # for parallel propagation only,1=right,2=left 
+case           = 0
 
 < initial_guess >
 
 omega_r        = 0.00001     # real part
-omega_i        = 0.01        # imag part
+omega_i        = 0.1        # imag part
 
 < plasma > 
 
@@ -36,7 +37,7 @@ kappa          = 4000
 < accuracy >
 
 N              = 4            # initial N for Besell summation,N<5
-eps_error      = 1.0e-6       # epsilon calculation error
-sol_err        = 1.0e-6       # root finding error
-exp            = 0            # disp/omega**exp to avoid trivial solutions
+eps_error      = 1.0e-14      # epsilon calculation error
+sol_err        = 1.0e-14      # root finding error
+exp            = 2            # disp/omega**exp to avoid trivial solutions
 

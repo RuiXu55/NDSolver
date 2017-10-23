@@ -5,7 +5,7 @@
 
 import sys
 import time
-import disp as disp
+import disp 
 import logging 
 import argparse
 import numpy as np
@@ -39,6 +39,7 @@ def main(args):
             param[key] = [] 
             param[key].append(val)
   logger.debug("All user defined parameters: %s\n", param)
+  param['calpol'] = float(1.)
 
   """ iterate through wavenumber  """
   dk     = (param['kend'][0]-param['kstart'][0])/param['ksteps'][0]
@@ -63,6 +64,7 @@ def main(args):
             args=data,method='hybr',tol=param['sol_err'][0]) 
         fzeta[n] = complex(sol.x[0],sol.x[1])
       logger.info("solution: k*di=%1.2e , omega/Omega_ci=%1.2e+%1.2ei\n",wave_k[n],fzeta[n].real, fzeta[n].imag)
+      sys.exit()
     except ValueError:
       logger.info('ERROR in root finding: wave_k =%f',wave_k[n])
 
@@ -82,7 +84,7 @@ def main(args):
     np.save('output.npy', param)
 
   tend = time.clock()
-  logger.info('\n Total time lapse: %1.2e\n',tend-tstart)
+  logger.info('\n Total time lapse: %1.2f\n',tend-tstart)
   return  0
 
 if __name__ == '__main__':
