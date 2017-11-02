@@ -17,5 +17,7 @@ if __name__ == '__main__':
   plt.plot(data['wave_k'],data['fzeta'].real,lw=2,label='Real')
   plt.xlabel('$kd_i$')
   plt.ylabel('$\omega/\Omega_i$')
+  plt.rcParams['font.size'] = 16
+  #plt.savefig('sample.pdf',format='pdf')
   plt.legend()
   plt.show()
