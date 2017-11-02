@@ -206,9 +206,14 @@ def det_para(z,*data):
     mu        = p['mu'][m]
     q         = p['q'][m]
 
-    ze        = np.sqrt(2.*kap/(2.*kap-3.))*(omega+(-1)**pol*mu*q)/(k*np.sqrt(beta_para*mu))
-    ze0       = np.sqrt(2.*kap/(2.*kap-3.))*omega/(k*np.sqrt(beta_para*mu))
-    disp_det += dens*mu*q**2*(ze0*f.Zk_para(ze,kap)+\
+    if (kap>=p['kappa_limit'][0]):
+      ze      = (omega+(-1)**pol*mu*q)/(k*np.sqrt(beta_para*mu))
+      ze0     = omega/(k*np.sqrt(beta_para*mu))
+      disp_det += dens*mu*q**2*(ze0*f.Z(ze)-(beta_perp/beta_para-1.)*f.dp(ze,0)/2.)
+    else:
+      ze      = np.sqrt(2.*kap/(2.*kap-3.))*(omega+(-1)**pol*mu*q)/(k*np.sqrt(beta_para*mu))
+      ze0     = np.sqrt(2.*kap/(2.*kap-3.))*omega/(k*np.sqrt(beta_para*mu))
+      disp_det += dens*mu*q**2*(ze0*f.Zk_para(ze,kap)+\
                     (beta_perp/beta_para-1.)*(1.+ze*f.Zk_para(ze,kap)))
   logger.debug('for omega=',omega,"disp_det = %e+%ei \n",disp_det.real,disp_det.imag)
   return (disp_det.real,disp_det.imag)
