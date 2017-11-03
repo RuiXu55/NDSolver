@@ -8,6 +8,7 @@ kend           = 0.5
 ksteps         = 50
 polarization   = 1           # for parallel propagation only,1=right,2=left 
 case           = 0
+cal_pol        = 1
 
 < initial_guess >
 

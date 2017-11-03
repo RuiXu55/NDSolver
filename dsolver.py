@@ -7,6 +7,7 @@ import sys
 import time
 import disp 
 import logging 
+import pol as p
 import argparse
 import numpy as np
 from scipy import interp
@@ -46,6 +47,9 @@ def main(args):
   fzeta  = np.empty(int(param['ksteps'][0]),dtype=complex)
   wave_k = np.empty(int(param['ksteps'][0]))
   zeta_guess = complex(param['omega_r'][0],param['omega_i'][0])    
+  # eigen value and polaization iEx/Ey*(omega_r/abs(omega_r))
+  val = []
+  pol = []
 
   for n in range(int(param['ksteps'][0])):
     logger.info('%d th iteration in %d ksteps \n' ,n,param['ksteps'][0])
@@ -64,6 +68,10 @@ def main(args):
             args=data,method='hybr',tol=param['sol_err'][0]) 
         fzeta[n] = complex(sol.x[0],sol.x[1])
       logger.info("solution: k*di=%1.2e , omega/Omega_ci=%1.2e+%1.2ei\n",wave_k[n],fzeta[n].real, fzeta[n].imag)
+      if (param['cal_pol'][0]):
+        val0,pol0 = p.pol(args,param,wave_k[n],fzeta[n])
+        val.append(val0)
+        pol.append(pol0)
     except ValueError:
       logger.info('ERROR in root finding: wave_k =%f',wave_k[n])
 

@@ -51,12 +51,10 @@ def complex_quadrature(intgrand,zh,jh,kappa,n,case):
 General dispersion relation for bi-maxwellian & kappa distribution
 adopted from Astfalk et. al. 2015
 '''
-def det(z,*data):
-  args,p,k = data
+def pol(args,p,k,omega):
   logging.basicConfig(level=args.loglevel or logging.INFO)
   logger = logging.getLogger(__name__)
 
-  omega  = z[0] +1j*z[1]  # omega/Omega_ci
   theta  = p['theta'][0]*np.pi/180.
   logger.debug("omega guess = %e+%ei \n",omega.real,omega.imag)
 
@@ -176,8 +174,15 @@ def det(z,*data):
   ''' calculate determinant '''
   disp_det = LA.det(epsilon)/omega**p['exp'][0]
 
-  logger.debug('for omega=',omega,"disp_det = %e+%ei \n",disp_det.real,disp_det.imag)
-  return (disp_det.real,disp_det.imag)
+  # calculate polarization 
+  val = np.ones(3,dtype =complex)    # eigenvalue 
+  vec = np.ones((3,3),dtype=complex) # eigenvectors 
+  val, vec = LA.eig(epsilon)
+  if (abs(omega.real)>1e-5):
+    pol = 1j*vec[1]/vec[0]*omega.real/abs(omega.real)
+  else:
+    pol = 1j*vec[1]/vec[0]
+  return val,pol
 
 """ 
 dispersion relation for parallal propagation 
@@ -204,8 +209,7 @@ def det_para(z,*data):
     ze0       = np.sqrt(2.*kap/(2.*kap-3.))*omega/(k*np.sqrt(beta_para*mu))
     disp_det += dens*mu*q**2*(ze0*f.Zk_para(ze,kap)+\
                     (beta_perp/beta_para-1.)*(1.+ze*f.Zk_para(ze,kap)))
-  logger.debug('for omega=',omega,"disp_det = %e+%ei \n",disp_det.real,disp_det.imag)
   return (disp_det.real,disp_det.imag)
 
 if __name__ == '__main__':
-  print ('dispersion relation dielectric tensor.')
+  print ('dispersion relation polarization.')
