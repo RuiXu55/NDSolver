@@ -5,7 +5,7 @@
 
 import sys
 import time
-import disp 
+import disp
 import logging 
 import pol as p
 import argparse

@@ -73,6 +73,9 @@ def det(z,*data):
     mu         = p['mu'][m]
     q          = p['q'][m]
     kappa      = int(p['kappa'][m]) # right now only integer kappa is supported
+    if p['kappa_dependent_T'][0]>0:
+      beta_perp = p['beta_perp'][m]*2.*kappa/(2.*kappa-3)
+      beta_para = p['beta_para'][m]*2.*kappa/(2.*kappa-3)
 
     ''' chiX shortcuts for long terms '''
     chi        = dens**1.5*q**2*np.sqrt(mu/beta_para)/(k*np.cos(theta))
@@ -196,14 +199,21 @@ def det_para(z,*data):
     beta_perp = p['beta_perp'][m]
     beta_para = p['beta_para'][m]
     kap       = int(p['kappa'][m])
+    if p['kappa_dependent_T'][0]>0:
+      beta_perp = p['beta_perp'][m]*2.*kap/(2.*kap-3)
+      beta_para = p['beta_para'][m]*2.*kap/(2.*kap-3)
     dens      = p['dens'][m]
     mu        = p['mu'][m]
     q         = p['q'][m]
-
-    ze        = np.sqrt(2.*kap/(2.*kap-3.))*(omega+(-1)**pol*mu*q)/(k*np.sqrt(beta_para*mu))
-    ze0       = np.sqrt(2.*kap/(2.*kap-3.))*omega/(k*np.sqrt(beta_para*mu))
-    disp_det += dens*mu*q**2*(ze0*f.Zk_para(ze,kap)+\
-                    (beta_perp/beta_para-1.)*(1.+ze*f.Zk_para(ze,kap)))
+    if kap > p['kappa_limit'][0]:
+      ze      = (omega + (-1)**pol*mu*q)/(k*np.sqrt(beta_para*mu))
+      ze0     = omega/(k*np.sqrt(beta_para*mu))
+      disp_det += dens*mu*q**2*(ze0*f.Z(ze)-(beta_perp/beta_para-1.)*f.dp(ze,0)/2.)
+    else:
+      ze      = np.sqrt(2.*kap/(2.*kap-3.))*(omega+(-1)**pol*mu*q)/(k*np.sqrt(beta_para*mu))
+      ze0     = np.sqrt(2.*kap/(2.*kap-3.))*omega/(k*np.sqrt(beta_para*mu))
+      disp_det += dens*mu*q**2*(ze0*f.Zk_para(ze,kap)+\
+              (beta_perp/beta_para-1.)*(1.+ze*f.Zk_para(ze,kap)))
   logger.debug('for omega=',omega,"disp_det = %e+%ei \n",disp_det.real,disp_det.imag)
   return (disp_det.real,disp_det.imag)
 

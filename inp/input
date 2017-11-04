@@ -7,8 +7,8 @@ kstart         = 0.1         # k normalized as k*d_i
 kend           = 0.5          
 ksteps         = 50
 polarization   = 1           # for parallel propagation only,1=right,2=left 
-case           = 0
-cal_pol        = 1
+cal_pol        = 0           # check if calculate polarization
+kappa_dependent_T = 1        # if use kappa dependent temperature
 
 < initial_guess >
 
