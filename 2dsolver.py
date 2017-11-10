@@ -80,7 +80,7 @@ def main(args):
   pool = mp.Pool(len(theta))
   zeta = []
   for i in range(0,len(theta)):
-      res = pool.apply_async(Loop,args=(i,param,theta[i],zeta_guess))
+      res = pool.apply_async(Loop,args=(i,args,param,theta[i],zeta_guess))
       zeta.append(res)
   pool.close()
   pool.join()
