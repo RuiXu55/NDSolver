@@ -5,8 +5,8 @@
 import sys
 import time
 import disp
+import utils
 import logging 
-import pol as p
 import argparse
 import numpy as np
 from scipy import interp
@@ -23,29 +23,14 @@ def main(args):
   logger = logging.getLogger(__name__)
 
   """ read plasma parameters """
-  param = {}
-  if not args.input :
-    args.input = 'inp/input'
-  with open(args.input,'r') as f:
-    for line in f:
-      if not line.isspace():
-        data = line.split()
-        if data[0] != '<':   
-          key = data[0]
-          val = float(data[2])
-          if key in param.keys():
-            param[key].append(val)
-          else:
-            param[key] = [] 
-            param[key].append(val)
-  logger.debug("All user defined parameters: %s\n", param)
-  param['calpol'] = float(1.)
+  param = utils.read_param(args)
   
   """ iterate through wavenumber  """
   dk     = (param['kend'][0]-param['kstart'][0])/param['ksteps'][0]
   fzeta  = np.empty(int(param['ksteps'][0]),dtype=complex)
   wave_k = np.empty(int(param['ksteps'][0]))
   zeta_guess = complex(param['omega_r'][0],param['omega_i'][0])    
+
   # eigen value and polaization iEx/Ey*(omega_r/abs(omega_r))
   val = []
   pol = []
@@ -68,6 +53,7 @@ def main(args):
         fzeta[n] = complex(sol.x[0],sol.x[1])
       logger.info("solution: k*di=%1.2e , omega/Omega_ci=%1.2e+%1.2ei\n",wave_k[n],fzeta[n].real, fzeta[n].imag)
       if (param['cal_pol'][0]):
+        import pol as p
         val0,pol0 = p.pol(args,param,wave_k[n],fzeta[n])
         val.append(val0)
         pol.append(pol0)

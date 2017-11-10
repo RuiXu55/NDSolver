@@ -6,6 +6,7 @@ import os
 import sys
 import time
 import disp
+import utils
 import logging 
 import pol as p
 import argparse
@@ -63,24 +64,8 @@ def main(args):
     logging.basicConfig(filename='log', filemode='w', level=logging.DEBUG)
   logger = logging.getLogger(__name__)
 
-  """ read plasma parameters """
-  param = {}
-  if not args.input :
-    args.input = 'inp/input'
-  with open(args.input,'r') as f:
-    for line in f:
-      if not line.isspace():
-        data = line.split()
-        if data[0] != '<':   
-          key = data[0]
-          val = float(data[2])
-          if key in param.keys():
-            param[key].append(val)
-          else:
-            param[key] = [] 
-            param[key].append(val)
-  logger.debug("All user defined parameters: %s\n", param)
-  param['calpol'] = float(1.)
+   """ read plasma parameters """
+  param = utils.read_param(args)
   
   """ iterate through wavenumber  """
   dk     = (param['kend'][0]-param['kstart'][0])/param['ksteps'][0]
