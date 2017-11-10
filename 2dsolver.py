@@ -64,7 +64,7 @@ def main(args):
     logging.basicConfig(filename='log', filemode='w', level=logging.DEBUG)
   logger = logging.getLogger(__name__)
 
-   """ read plasma parameters """
+  """ read plasma parameters """
   param = utils.read_param(args)
   
   """ iterate through wavenumber  """
